@@ -404,6 +404,14 @@ public class SimplerMultiTouch {
 	} // end setFunction
 
 	/**
+	 * The frameCount used to determine a swipe
+	 * @param swipeThresh
+	 */
+	public void setSwipeThresh(int swipeThresh) {
+		interactionManager.setSwipeThresh(swipeThresh);
+	} // end setSwipeThresh
+	
+	/**
 	 * Just a test function
 	 */
 	public String whosYourCat() {

@@ -47,7 +47,7 @@ public class InteractionManager {
 	boolean swipeEligible = true; // false when a swipe occurs, back to true
 									// when there is a change in touchcount
 	float swipeCounter = 0; // use this to count up to a certain thresh
-	float swipeThresh = 4; // when the abs(swipeCounter is above this then the
+	float swipeThresh = 8; // when the abs(swipeCounter is above this then the
 							// thing will trigger
 	float swipeFriction = (float) .9; // when the swipe thing does not happen
 										// then the
@@ -70,6 +70,14 @@ public class InteractionManager {
 	public InteractionManager(PApplet parent) {
 		this.parent = parent;
 	} // end constructor
+	
+	/**
+	 * sort of determines how many frames a swipe must take place before it triggers
+	 * @param swipeThresh the int value for frames before swipe
+	 */
+	public void setSwipeThresh(int swipeThresh) {
+		this.swipeThresh = (float)swipeThresh;
+	} // end setSwipeThresh
 
 	//
 	@SuppressWarnings({ "unchecked", "rawtypes" })
