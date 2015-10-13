@@ -17,8 +17,7 @@ class TouchSourceThread extends Thread {
 	protected static LinkedList<BufferedReader> tuioServerOutList = new LinkedList<BufferedReader>();
 	protected static LinkedList<BufferedWriter> tuioServerInList = new LinkedList<BufferedWriter>();
 
-	TouchSourceThread(String label, String execArg,
-			String prematureShutdownError) {
+	TouchSourceThread(String label, String execArg, String prematureShutdownError) {
 		this.label = label;
 		this.execArg = execArg;
 		this.prematureShutdownError = prematureShutdownError;
@@ -27,20 +26,27 @@ class TouchSourceThread extends Thread {
 	@Override
 	public void run() {
 		System.out.println("in run().  starting the touchsourcethread");
+
 		try {
+
 			Process tuioServer = Runtime.getRuntime().exec(execArg);
-			BufferedReader tuioServerErr = new BufferedReader(
-					new InputStreamReader(tuioServer.getErrorStream()));
-			BufferedReader tuioServerOut = new BufferedReader(
-					new InputStreamReader(tuioServer.getInputStream()));
-			BufferedWriter tuioServerIn = new BufferedWriter(
-					new OutputStreamWriter(tuioServer.getOutputStream()));
+
+			BufferedReader tuioServerErr = new BufferedReader(new InputStreamReader(tuioServer.getErrorStream()));
+
+			BufferedReader tuioServerOut = new BufferedReader(new InputStreamReader(tuioServer.getInputStream()));
+
+			BufferedWriter tuioServerIn = new BufferedWriter(new OutputStreamWriter(tuioServer.getOutputStream()));
 
 			tuioServerList.add(tuioServer);
+
 			tuioServerErrList.add(tuioServerErr);
+
 			tuioServerOutList.add(tuioServerOut);
+
 			tuioServerInList.add(tuioServerIn);
 
+			System.out.println("all thread stuff is setup and good to go");
+			
 			while (true) {
 				try {
 					int result = tuioServer.exitValue();
@@ -50,10 +56,13 @@ class TouchSourceThread extends Thread {
 					Thread.sleep(100);
 				}
 			}
+
 		} catch (IOException exception) {
+			System.err.println("io exception in TouchSourceThread");
 			System.err.println(exception.getMessage());
 		} catch (Exception exception) {
 			System.err.println(label + " TUIO Server stopped!");
 		}
+
 	}
-}
+} // end class TouchSourceThread

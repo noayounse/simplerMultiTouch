@@ -105,9 +105,11 @@ public class TouchPoint {
 		// account for the offset of the frame and menu
 		this.pos.x -= smtParent.frameLocation.x;
 		this.pos.y -= smtParent.frameLocation.y;
-		// save the initial position
-		if (inceptionPos == null)
+		// save the initial position and initial oldPos
+		if (inceptionPos == null) {
+			this.oldPos = new PVector(this.pos.x, this.pos.y);
 			inceptionPos = new PVector(this.pos.x, this.pos.y);
+		}
 
 		if (smtParent.shouldRecoredPaths())
 			path.add(this.pos.get());
@@ -130,6 +132,7 @@ public class TouchPoint {
 	// touch functions
 	/**
 	 * InteractionManager function
+	 * 
 	 * @param buddyIn
 	 */
 	public void setPairingBuddy(TouchPoint buddyIn) {
@@ -138,6 +141,7 @@ public class TouchPoint {
 
 	/**
 	 * InteractionManager function
+	 * 
 	 * @param orderIn
 	 */
 	public void setOrder(int orderIn) {
@@ -146,6 +150,7 @@ public class TouchPoint {
 
 	/**
 	 * InteractionManager function
+	 * 
 	 * @param posIn
 	 * @param groupCountIn
 	 */
@@ -165,7 +170,8 @@ public class TouchPoint {
 	 * Returns the String version of this TouchPoint
 	 */
 	public String toString() {
-		String builder = "TouchPoint id: " + id + " pos: " + (int) pos.x + ", " + (int) pos.y + " isMoving? " + isMoving + " x/ySpeed: " + xSpeed + ", " + ySpeed;
+		String builder = "TouchPoint id: " + id + " pos: " + (int) pos.x + ", " + (int) pos.y + " isMoving? " + isMoving + " x/ySpeed: " + xSpeed + ", " + ySpeed + "\n";
+		builder += " inceptionPos: " + (int) inceptionPos.x + ", " + (int) inceptionPos.y + " oldPos: " + (int) oldPos.x + ", " + oldPos.y;
 		return builder;
 	} // end toString
 } // end class TouchPoint

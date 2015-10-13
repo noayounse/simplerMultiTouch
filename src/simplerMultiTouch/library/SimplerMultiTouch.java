@@ -26,6 +26,8 @@ package simplerMultiTouch.library;
 import java.awt.Point;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -48,12 +50,13 @@ public class SimplerMultiTouch {
 	public String os_string = "";
 	public boolean os_windows = true;
 	public File tempdir = null;
-	public int port = 0;
+	public int port = 3333; // default
 
 	public MouseToTUIO mtt;
 
 	public TuioComponent tuioComponent;
 	public TuioClient tuioClient;
+	TouchSourceThread wintouch_thread;
 
 	// private ArrayList<TouchPoint> touchPointsCursors = new ArrayList();
 	private ArrayList<TouchPoint> touchPointsObjects = new ArrayList();
@@ -69,13 +72,26 @@ public class SimplerMultiTouch {
 
 	private boolean recordPaths = true; // to record paths for the touchPonts
 
+	// focus stuff - to make it so it automatically disconnects/shutsdown when
+	// parent frame isnt in focus
+	private boolean useFocusAbility = false;
+	private boolean isInFocus = true;
+	private int focusDelay = 30; // frames to delay focus frame
+	private int lastFocusChange = 0;
+
 	private InteractionManager interactionManager;
 
 	private int lastGetCursorRequest = -1; // keep track of when this was called
 
+	private long startupDelay = 500l; // amt of time before the thing starts
+										// listening?
+	private long startupTime = 0l;
+
 	/** whether or not to say things */
 	public boolean verbose = false;
-	
+
+	private boolean addedShutdownHook = false; // so it only adds once
+
 	/**
 	 * 
 	 */
@@ -90,7 +106,7 @@ public class SimplerMultiTouch {
 	 *            The parent PApplet
 	 */
 	public void begin(PApplet parent) {
-		begin(parent, 3333); // default
+		begin(parent, port); // default
 	} // end constructor
 
 	/**
@@ -109,16 +125,27 @@ public class SimplerMultiTouch {
 		this.parent.registerMethod("draw", this);
 		this.parent.registerMethod("mouseEvent", this);
 
-		this.interactionManager = new InteractionManager(this.parent);
-
 		init();
 	} // end begin
+
+	/**
+	 * For when restarting the listeners and stuff
+	 */
+	public void reBegin() {
+		init();
+	} // end reBegin
 
 	/*
 	 * 
 	 */
 	private void init() {
-		System.out.println("Starting up SimplerMultiTouch ");
+		if (verbose) {
+			System.out.println("__");
+			System.out.println("__");
+			System.out.println(parent.frameCount + " in init().  Starting up SimplerMultiTouch ");
+		}
+
+		this.interactionManager = new InteractionManager(this.parent);
 
 		os_string = System.getProperty("os.name");
 		os_windows = os_string.startsWith("Windows");
@@ -139,10 +166,21 @@ public class SimplerMultiTouch {
 		if (tuioClient != null) {
 			tuioClient.addTuioListener(tuioComponent);
 			tuioClient.connect();
-			System.out.println("connected to tuio");
-			this.parent.registerMethod("dispose", this);
+			if (verbose)
+				System.out.println("connected to tuio on port " + this.port);
 		}
 
+		// add the shutdown thing.. but only once [hence the addedShutdownHook]
+		// prettymuch the same as the SimpleMultiTouch methodology
+		if (!addedShutdownHook) {
+			addJVMShutdownHook(this);
+			addedShutdownHook = true;
+		}
+
+		if (verbose)
+			System.out.println(parent.frameCount + " done with init");
+
+		startupTime = parent.millis();
 	} // end init
 
 	/*
@@ -154,6 +192,16 @@ public class SimplerMultiTouch {
 		interactionManager.verbose = verbose;
 		this.verbose = verbose;
 	} // end setVerbose
+
+	/**
+	 * Setting the focus
+	 * 
+	 * @param useFocusAbility
+	 *            The boolean
+	 */
+	public void setUseFocusAbility(boolean useFocusAbility) {
+		this.useFocusAbility = useFocusAbility;
+	} // end setUseFocusAbility
 
 	/*
 	 * Whether or not to record the paths
@@ -186,7 +234,26 @@ public class SimplerMultiTouch {
 	 */
 	public void draw() {
 		getTouchPoints();
-		interactionManager.update(touchPointsCursors);
+		if (interactionManager != null)
+			interactionManager.update(touchPointsCursors);
+
+		// look at the focus if its set to do that
+		if (useFocusAbility) {
+			if (parent.focused && !isInFocus && parent.frameCount - lastFocusChange > focusDelay) {
+				isInFocus = parent.focused;
+				lastFocusChange = parent.frameCount;
+				// reBegin
+				if (verbose)
+					System.out.println("REFOCUSING. GOING TO RE-BEGIN");
+				reBegin();
+			} else if (!parent.focused && isInFocus && parent.frameCount - lastFocusChange > focusDelay) {
+				isInFocus = parent.focused;
+				lastFocusChange = parent.frameCount;
+				if (verbose)
+					System.out.println("FOCUS OUT. GOING TO STOP STUFF");
+				dispose();
+			}
+		}
 	} // end draw
 
 	/**
@@ -227,7 +294,9 @@ public class SimplerMultiTouch {
 			// + (is64Bit ? "Touch2Tuio_x64.exe" : "Touch2Tuio.exe"));
 
 			String touch2tuio_path = touch2tuio.getAbsolutePath();
+
 			String window_title = parent.frame.getTitle();
+
 			System.out.println("parent frameLocation at: " + parent.frame.getLocation().getX() + ", " + parent.frame.getLocation().getY());
 
 			// does not seem to work......
@@ -241,7 +310,9 @@ public class SimplerMultiTouch {
 
 			String error_message = "WM_TOUCH Process died early, make sure Visual C++ Redistributable for Visual Studio 2012 is installed (http://www.microsoft.com/en-us/download/details.aspx?id=30679), otherwise try restarting your computer.";
 
-			TouchSourceThread wintouch_thread = new TouchSourceThread("WM_TOUCH", exec, error_message);
+			// TouchSourceThread wintouch_thread = new
+			// TouchSourceThread("WM_TOUCH", exec, error_message);
+			wintouch_thread = new TouchSourceThread("WM_TOUCH", exec, error_message);
 			wintouch_thread.start();
 
 			System.out.println("started the wintouch_thread");
@@ -276,14 +347,19 @@ public class SimplerMultiTouch {
 	 * @return A file written into dir
 	 * @throws IOException
 	 */
-	private static File loadFile(File dir, String resource) throws IOException {
+	private File loadFile(File dir, String resource) throws IOException {
 		// BufferedInputStream src = new BufferedInputStream(
 		// PApplet.class.getResourceAsStream("/resources/" + resource));
 		System.out.println("dir.getAbsolutePath()\\data\\: " + dir.getAbsolutePath() + "\\" + resource);
 
+		// BufferedInputStream src = new
+		// BufferedInputStream(PApplet.class.getResourceAsStream("/data/" +
+		// resource));
 		BufferedInputStream src = new BufferedInputStream(PApplet.class.getResourceAsStream("/data/" + resource));
 		final File exeTempFile = new File(dir.getAbsolutePath() + "\\" + resource);
+
 		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(exeTempFile));
+
 		byte[] tempexe = new byte[4 * 1024];
 		int rc;
 		while ((rc = src.read(tempexe)) > 0) {
@@ -335,6 +411,11 @@ public class SimplerMultiTouch {
 	 */
 	@SuppressWarnings("unchecked")
 	public HashMap<Long, TouchPoint> getTouchPoints() {
+		// in the event that it's not listening because it wasn't initted or was
+		// already disposed
+		if (parent == null || tuioComponent == null) {
+			return touchPointsCursors;
+		}
 
 		// do the frame check. if it already ran this frame just return the hm
 		if (parent.frameCount == lastGetCursorRequest)
@@ -342,7 +423,13 @@ public class SimplerMultiTouch {
 		else
 			lastGetCursorRequest = parent.frameCount;
 
+		if (true) {
+			// System.out.print(parent.frameCount + " ");
+			// return null;
+		}
+
 		touchPointsCursors.clear();
+
 		Hashtable<Long, TuioCursor> ht = (Hashtable<Long, TuioCursor>) tuioComponent.getTuioCursorHashtable().clone();
 		Set<Long> keys = ht.keySet();
 		for (Long key : keys) {
@@ -355,6 +442,7 @@ public class SimplerMultiTouch {
 			}
 		}
 		touchPointsCursorsOLD = (HashMap<Long, TouchPoint>) touchPointsCursors.clone();
+
 		return touchPointsCursors;
 	} // end getTouchPoints
 
@@ -387,17 +475,89 @@ public class SimplerMultiTouch {
 	} // end mouseEvent
 
 	/**
-	 * Called when closed
+	 * Simply point to the dispose method
+	 */
+	private static void addJVMShutdownHook(final SimplerMultiTouch smtIn) {
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+			public void run() {
+				smtIn.dispose();
+			}
+		}));
+	} // end addJVMShutdownHook
+
+	/**
+	 * Called when closed or when pausing
 	 */
 	public void dispose() {
-		if (tuioClient.isConnected())
+		if (tuioComponent != null) {
+			tuioComponent = null;
+		}
+		if (tuioClient.isConnected()) {
 			tuioClient.disconnect();
+			System.out.println("disposing of tuioClient");
+			tuioClient = null;
+		}
+
+		for (BufferedWriter writer : wintouch_thread.tuioServerInList) {
+			try {
+				writer.newLine();
+				writer.flush();
+				System.out.println("stoppping bufferedWriter");
+				writer = null;
+			} catch (IOException exception) {
+			}
+		}
+		wintouch_thread.tuioServerInList.clear();
+
+		for (BufferedReader reader : wintouch_thread.tuioServerOutList) {
+			try {
+				reader.close();
+				reader = null;
+				System.out.println("stoppping bufferedReader");
+			} catch (Exception ee) {
+			}
+		}
+		wintouch_thread.tuioServerOutList.clear();
+
+		try {
+			Thread.sleep(500);
+		} catch (InterruptedException s) {
+
+		}
+		for (Process p : wintouch_thread.tuioServerList) {
+			if (p != null) {
+				System.out.println("destroying process");
+				p.destroy();
+				p = null;
+			}
+		}
+		wintouch_thread.tuioServerList.clear();
+		try {
+			wintouch_thread.interrupt();
+		} catch (Exception e) {
+			System.err.println("error closing wintouch_thread");
+		}
+		wintouch_thread = null;
+
+		// this.parent.unregisterMethod("pre", this);
+		// this.parent.unregisterMethod("draw", this);
+		// this.parent.unregisterMethod("mouseEvent", this);
+
+		this.interactionManager = null;
+		// this.parent = null;
+
+		// reset the cursor list
+		this.touchPointsCursors.clear();
+		this.touchPointsCursorsOLD.clear();
+		System.gc();
 	} // end dispose
 
 	/**
 	 * 
-	 * @param type A TouchFunctions enum.  See TouchFunctions.java for types
-	 * @param functionName The String of the function name to run
+	 * @param type
+	 *            A TouchFunctions enum. See TouchFunctions.java for types
+	 * @param functionName
+	 *            The String of the function name to run
 	 */
 	public void setFunction(TouchFunctions type, String functionName) {
 		interactionManager.setFunction(type, functionName);
@@ -405,12 +565,13 @@ public class SimplerMultiTouch {
 
 	/**
 	 * The frameCount used to determine a swipe
+	 * 
 	 * @param swipeThresh
 	 */
 	public void setSwipeThresh(int swipeThresh) {
 		interactionManager.setSwipeThresh(swipeThresh);
 	} // end setSwipeThresh
-	
+
 	/**
 	 * Just a test function
 	 */

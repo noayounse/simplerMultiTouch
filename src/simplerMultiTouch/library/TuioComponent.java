@@ -5,7 +5,6 @@ import java.util.Hashtable;
 import processing.core.PApplet;
 import TUIO.*;
 
-
 public class TuioComponent implements TuioListener {
 
 	private Hashtable<Long, TuioObject> objectList = new Hashtable<Long, TuioObject>();
@@ -29,9 +28,7 @@ public class TuioComponent implements TuioListener {
 		objectList.put(tobj.getSessionID(), obj);
 
 		if (verbose)
-			System.out.println("add obj " + tobj.getSymbolID() + " ("
-					+ tobj.getSessionID() + ") " + tobj.getX() + " "
-					+ tobj.getY() + " " + tobj.getAngle());
+			System.out.println("add obj " + tobj.getSymbolID() + " (" + tobj.getSessionID() + ") " + tobj.getX() + " " + tobj.getY() + " " + tobj.getAngle());
 	} // end addTuioObject
 
 	public void updateTuioObject(TuioObject tobj) {
@@ -39,20 +36,15 @@ public class TuioComponent implements TuioListener {
 		obj.update(tobj);
 
 		if (verbose)
-			System.out.println("set obj " + tobj.getSymbolID() + " ("
-					+ tobj.getSessionID() + ") " + tobj.getX() + " "
-					+ tobj.getY() + " " + tobj.getAngle() + " "
-					+ tobj.getMotionSpeed() + " " + tobj.getRotationSpeed()
-					+ " " + tobj.getMotionAccel() + " "
-					+ tobj.getRotationAccel());
+			System.out.println("set obj " + tobj.getSymbolID() + " (" + tobj.getSessionID() + ") " + tobj.getX() + " " + tobj.getY() + " " + tobj.getAngle() + " " + tobj.getMotionSpeed() + " "
+					+ tobj.getRotationSpeed() + " " + tobj.getMotionAccel() + " " + tobj.getRotationAccel());
 	} // end updateTuioObject
 
 	public void removeTuioObject(TuioObject tobj) {
 		objectList.remove(tobj.getSessionID());
 
 		if (verbose)
-			System.out.println("del obj " + tobj.getSymbolID() + " ("
-					+ tobj.getSessionID() + ")");
+			System.out.println("del obj " + tobj.getSymbolID() + " (" + tobj.getSessionID() + ")");
 	} // end removeTuioObject
 
 	public Hashtable<Long, TuioObject> getTuioObjectHashtable() {
@@ -65,24 +57,18 @@ public class TuioComponent implements TuioListener {
 		}
 
 		if (verbose)
-			System.out.println("add cur " + tcur.getCursorID() + " ("
-					+ tcur.getSessionID() + ") " + tcur.getX() + " "
-					+ tcur.getY());
+			System.out.println("add cur " + tcur.getCursorID() + " (" + tcur.getSessionID() + ") " + tcur.getX() + " " + tcur.getY());
 	} // end addTuioCursor
 
 	public void updateTuioCursor(TuioCursor tcur) {
 		if (verbose)
-			System.out.println("set cur " + tcur.getCursorID() + " ("
-					+ tcur.getSessionID() + ") " + tcur.getX() + " "
-					+ tcur.getY() + " " + tcur.getMotionSpeed() + " "
-					+ tcur.getMotionAccel());
+			System.out.println("set cur " + tcur.getCursorID() + " (" + tcur.getSessionID() + ") " + tcur.getX() + " " + tcur.getY() + " " + tcur.getMotionSpeed() + " " + tcur.getMotionAccel());
 	} // end updateTuioCursor
 
 	public void removeTuioCursor(TuioCursor tcur) {
 		cursorList.remove(tcur.getSessionID());
 		if (verbose)
-			System.out.println("del cur " + tcur.getCursorID() + " ("
-					+ tcur.getSessionID() + ")");
+			System.out.println("del cur " + tcur.getCursorID() + " (" + tcur.getSessionID() + ")");
 	} // end removeTuioCursor
 
 	public Hashtable<Long, TuioCursor> getTuioCursorHashtable() {
@@ -94,9 +80,7 @@ public class TuioComponent implements TuioListener {
 		blobList.put(tblb.getSessionID(), blob);
 
 		if (verbose)
-			System.out.println("add blb " + tblb.getBlobID() + " ("
-					+ tblb.getSessionID() + ") " + tblb.getX() + " "
-					+ tblb.getY() + " " + tblb.getAngle());
+			System.out.println("add blb " + tblb.getBlobID() + " (" + tblb.getSessionID() + ") " + tblb.getX() + " " + tblb.getY() + " " + tblb.getAngle());
 	} // end addTuioBlob
 
 	public void updateTuioBlob(TuioBlob tblb) {
@@ -104,20 +88,15 @@ public class TuioComponent implements TuioListener {
 		blob.update(tblb);
 
 		if (verbose)
-			System.out.println("set blb " + tblb.getBlobID() + " ("
-					+ tblb.getSessionID() + ") " + tblb.getX() + " "
-					+ tblb.getY() + " " + tblb.getAngle() + " "
-					+ tblb.getMotionSpeed() + " " + tblb.getRotationSpeed()
-					+ " " + tblb.getMotionAccel() + " "
-					+ tblb.getRotationAccel());
+			System.out.println("set blb " + tblb.getBlobID() + " (" + tblb.getSessionID() + ") " + tblb.getX() + " " + tblb.getY() + " " + tblb.getAngle() + " " + tblb.getMotionSpeed() + " "
+					+ tblb.getRotationSpeed() + " " + tblb.getMotionAccel() + " " + tblb.getRotationAccel());
 	} // end updateTuioBlob
 
 	public void removeTuioBlob(TuioBlob tblb) {
 		blobList.remove(tblb.getSessionID());
 
 		if (verbose)
-			System.out.println("del blb " + tblb.getBlobID() + " ("
-					+ tblb.getSessionID() + ")");
+			System.out.println("del blb " + tblb.getBlobID() + " (" + tblb.getSessionID() + ")");
 	} // end removeTuioBlob
 
 	public void refresh(TuioTime frameTime) {
